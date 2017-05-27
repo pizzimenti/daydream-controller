@@ -6,6 +6,7 @@ using UnityEngine;
 public class Quiver : MonoBehaviour {
 
     public GameObject arrowPrefab;
+    private GameObject heldArrow;
 
 	// Use this for initialization
 	void Start () {
@@ -25,6 +26,20 @@ public class Quiver : MonoBehaviour {
 
     private void CreateArrow()
     {
-        Instantiate(arrowPrefab);
+        // create the arrow
+        GameObject arrow = Instantiate(arrowPrefab);
+
+        // position and orient the arrow near the arm
+        HoldArrow(arrow);
+    }
+
+    private void HoldArrow(GameObject arrow)
+    {
+        heldArrow = arrow;
+
+        // make a child of this object
+        heldArrow.transform.SetParent(transform, false);
+        heldArrow.transform.localPosition = new Vector3(0, 0, 1);
+        heldArrow.transform.localEulerAngles = new Vector3(90, 0, 0);
     }
 }
