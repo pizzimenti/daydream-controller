@@ -21,7 +21,11 @@ public class Quiver : MonoBehaviour {
         {
             CreateArrow();
         }
-		
+
+        if (heldArrow == null) return;
+
+        if (GvrController.ClickButtonUp)
+            ReleaseArrow();
 	}
 
     private void CreateArrow()
@@ -41,5 +45,18 @@ public class Quiver : MonoBehaviour {
         heldArrow.transform.SetParent(transform, false);
         heldArrow.transform.localPosition = new Vector3(0, 0, 1);
         heldArrow.transform.localEulerAngles = new Vector3(90, 0, 0);
+    }
+
+    private void ReleaseArrow()
+    {
+        // change the parent to the world
+        heldArrow.transform.SetParent(null, true);
+
+        // nullify the current velocity
+        Rigidbody arrowRigidBody = heldArrow.GetComponent<Rigidbody>();
+        arrowRigidBody.velocity = Vector3.zero;
+        arrowRigidBody.isKinematic = false;
+
+        heldArrow = null;
     }
 }
