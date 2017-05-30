@@ -8,6 +8,9 @@ public class Quiver : MonoBehaviour {
     public GameObject arrowPrefab;
     private GameObject heldArrow;
 
+    private Vector3 throwVelocity;
+    private Vector3 previousPosition;
+
 	// Use this for initialization
 	void Start () {
 		
@@ -23,6 +26,8 @@ public class Quiver : MonoBehaviour {
         }
 
         if (heldArrow == null) return;
+
+        CalculateThrowVelocity();
 
         if (GvrController.ClickButtonUp)
             ReleaseArrow();
@@ -57,6 +62,18 @@ public class Quiver : MonoBehaviour {
         arrowRigidBody.velocity = Vector3.zero;
         arrowRigidBody.isKinematic = false;
 
+        // throw the object when releasing while held
+        arrowRigidBody.AddForce(throwVelocity, ForceMode.VelocityChange);
+
         heldArrow = null;
+    }
+
+    private void CalculateThrowVelocity()
+    {
+        // the velocity based on the previous position
+        throwVelocity = (heldArrow.transform.position - previousPosition) / Time.deltaTime;
+
+        // update previous position
+        previousPosition = heldArrow.transform.position;
     }
 }
