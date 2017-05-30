@@ -14,7 +14,7 @@
 
 // The controller is not available for versions of Unity without the
 // // GVR native integration.
-#if UNITY_HAS_GOOGLEVR && (UNITY_ANDROID || UNITY_EDITOR)
+#if UNITY_HAS_GOOGLEVR && UNITY_EDITOR
 
 using UnityEngine;
 
@@ -22,6 +22,10 @@ using UnityEngine;
 namespace Gvr.Internal {
   /// Controller provider that connects to the controller emulator to obtain controller events.
   class EmulatorControllerProvider : IControllerProvider {
+    /// Helper class to get Instant Preview controller events if connected.
+    private InstantPreviewControllerProvider instantPreviewControllerProvider = 
+      new InstantPreviewControllerProvider();
+
     private ControllerState state = new ControllerState();
 
     /// Yaw correction due to recentering.
@@ -51,19 +55,25 @@ namespace Gvr.Internal {
     }
 
     public void ReadState(ControllerState outState) {
-      lock (state) {
-        state.connectionState = EmulatorManager.Instance.Connected ? GvrConnectionState.Connected :
-            GvrConnectionState.Connecting;
-        state.apiStatus = EmulatorManager.Instance.Connected ? GvrControllerApiStatus.Ok :
-            GvrControllerApiStatus.Unavailable;
+      if (InstantPreview.Instance != null && InstantPreview.Instance.IsCurrentlyConnected) {
+        // Uses Instant Preview to get controller state if connected.
+        instantPreviewControllerProvider.ReadState(outState);
+      } else {
+        // If Instant Preview is not connected, tries to use the Controller Emulator.
+        lock (state) {
+          state.connectionState = EmulatorManager.Instance.Connected ? GvrConnectionState.Connected :
+              GvrConnectionState.Connecting;
+          state.apiStatus = EmulatorManager.Instance.Connected ? GvrControllerApiStatus.Ok :
+              GvrControllerApiStatus.Unavailable;
 
-        // During emulation, just assume the controller is fully charged
-        state.isCharging = false;
-        state.batteryLevel = GvrControllerBatteryLevel.Full;
+          // During emulation, just assume the controller is fully charged
+          state.isCharging = false;
+          state.batteryLevel = GvrControllerBatteryLevel.Full;
 
-        outState.CopyFrom(state);
+          outState.CopyFrom(state);
+        }
+        state.ClearTransientState();
       }
-      state.ClearTransientState();
     }
 
     public void OnPause() {}
