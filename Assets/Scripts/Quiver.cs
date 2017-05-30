@@ -11,13 +11,20 @@ public class Quiver : MonoBehaviour {
     private Vector3 throwVelocity;
     private Vector3 previousPosition;
 
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
+    private float pullBackAmount = 0.0f;
+
+    private bool IsFiring
+    {
+        get { return pullBackAmount > 0.5f; }
+    }
+
+    // Use this for initialization
+    void Start() {
+
+    }
+
+    // Update is called once per frame
+    void Update() {
 
         // listen for click events
         if (GvrController.ClickButtonDown)
@@ -27,11 +34,12 @@ public class Quiver : MonoBehaviour {
 
         if (heldArrow == null) return;
 
+        PollTouchpad();
         CalculateThrowVelocity();
 
         if (GvrController.ClickButtonUp)
             ReleaseArrow();
-	}
+    }
 
     private void CreateArrow()
     {
@@ -75,5 +83,20 @@ public class Quiver : MonoBehaviour {
 
         // update previous position
         previousPosition = heldArrow.transform.position;
+    }
+    private void PollTouchpad()
+    {
+        pullBackAmount = GvrController.TouchPos.y;
+        PositionArrow();
+    }
+
+    private void PositionArrow()
+    {
+        // update the position of the arrow locally based on the pullback amount
+        // since touchpad ranges from 0 (top).. 1(bottom) we must invert the amount coming in
+        const float initialOffset = 0.25f;
+        Vector3 tranformLocalPosition = heldArrow.transform.localPosition;
+        tranformLocalPosition.z = initialOffset + 1f - pullBackAmount;
+        heldArrow.transform.localPosition = tranformLocalPosition;
     }
 }
