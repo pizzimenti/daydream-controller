@@ -11,6 +11,9 @@ public class Quiver : MonoBehaviour {
     private Vector3 throwVelocity;
     private Vector3 previousPosition;
 
+    public Vector3 maxFireVelocity = new Vector3(0, 30, 0);
+    private Vector3 fireVelocity;
+
     private float pullBackAmount = 0.0f;
 
     private bool IsFiring
@@ -36,6 +39,7 @@ public class Quiver : MonoBehaviour {
 
         PollTouchpad();
         CalculateThrowVelocity();
+        CalculateFireVelocity();
 
         if (GvrController.ClickButtonUp)
             ReleaseArrow();
@@ -70,8 +74,17 @@ public class Quiver : MonoBehaviour {
         arrowRigidBody.velocity = Vector3.zero;
         arrowRigidBody.isKinematic = false;
 
-        // throw the object when releasing while held
-        arrowRigidBody.AddForce(throwVelocity, ForceMode.VelocityChange);
+        if (IsFiring)
+        {
+            // fire the object when releasing while aiming
+            arrowRigidBody.AddRelativeForce(fireVelocity, ForceMode.VelocityChange);
+        }
+        else
+        {
+            // throw the object when releasing while held
+            arrowRigidBody.AddForce(throwVelocity, ForceMode.VelocityChange);
+        }
+
 
         heldArrow = null;
     }
@@ -98,5 +111,10 @@ public class Quiver : MonoBehaviour {
         Vector3 tranformLocalPosition = heldArrow.transform.localPosition;
         tranformLocalPosition.z = initialOffset + 1f - pullBackAmount;
         heldArrow.transform.localPosition = tranformLocalPosition;
+    }
+
+    private void CalculateFireVelocity()
+    {
+        fireVelocity = maxFireVelocity * pullBackAmount;
     }
 }
