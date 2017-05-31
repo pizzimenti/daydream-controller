@@ -21,6 +21,23 @@ public class Quiver : MonoBehaviour {
         get { return pullBackAmount > 0.5f; }
     }
 
+    private bool ArmIsInPosition
+    {
+        get
+        {
+            // The rotation to test against
+            const float compareAgainstRotation = 90f;
+
+            // wiggle room afforded to the rotation check
+            const float compareEpsilon = 65f;
+
+            // get roatation from gObj's xform which is set by arm controller
+            float observedRotation = transform.localEulerAngles.x;
+
+            return Mathf.Abs(compareAgainstRotation - observedRotation) < compareEpsilon;
+        }
+    }
+
     // Use this for initialization
     void Start() {
 
@@ -30,7 +47,7 @@ public class Quiver : MonoBehaviour {
     void Update() {
 
         // listen for click events
-        if (GvrController.ClickButtonDown)
+        if (GvrController.ClickButtonDown && ArmIsInPosition)
         {
             CreateArrow();
         }
