@@ -15,6 +15,7 @@ public class Quiver : MonoBehaviour {
     private Vector3 fireVelocity;
 
     private float pullBackAmount = 0.0f;
+    private LineRenderer trajectoryLineRenderer;
 
     private bool IsFiring
     {
@@ -40,7 +41,8 @@ public class Quiver : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-
+        // get line renderer for trajectory simulation
+        trajectoryLineRenderer = GetComponent<LineRenderer>();
     }
 
     // Update is called once per frame
@@ -55,6 +57,7 @@ public class Quiver : MonoBehaviour {
         if (heldArrow == null) return;
 
         PollTouchpad();
+        SimulateTrajectory();
         CalculateThrowVelocity();
         CalculateFireVelocity();
 
@@ -102,7 +105,10 @@ public class Quiver : MonoBehaviour {
             arrowRigidBody.AddForce(throwVelocity, ForceMode.VelocityChange);
         }
 
+        TrailRenderer trailRenderer = heldArrow.GetComponent<TrailRenderer>();
+        trailRenderer.enabled = true;
 
+        trajectoryLineRenderer.enabled = false;
         heldArrow = null;
     }
 
@@ -133,5 +139,36 @@ public class Quiver : MonoBehaviour {
     private void CalculateFireVelocity()
     {
         fireVelocity = maxFireVelocity * pullBackAmount;
+    }
+
+    private void SimulateTrajectory()
+    {
+        // only show if the arrow is being fired
+        trajectoryLineRenderer.enabled = IsFiring;
+
+        Vector3 initialPosition = heldArrow.transform.position;
+        Vector3 initialVelocity = heldArrow.transform.rotation * fireVelocity;
+
+        const int numberOfPositionsToSimulate = 50;
+        const float timeStepBetweenPositions = 0.2f;
+
+        // setup initial conditions
+        Vector3 simulatedPosition = initialPosition;
+        Vector3 simulatedVelocity = initialVelocity;
+
+        // update position count
+        trajectoryLineRenderer.positionCount = numberOfPositionsToSimulate;
+
+        for (int i = 0; i < numberOfPositionsToSimulate; i++)
+        {
+            // set each position of the line renderer
+            trajectoryLineRenderer.SetPosition(i, simulatedPosition);
+
+            // change velocity based on gravity and the time step
+            simulatedVelocity += Physics.gravity * timeStepBetweenPositions;
+
+            // change position based on gravity and time step
+            simulatedPosition += simulatedVelocity * timeStepBetweenPositions;
+        }
     }
 }
